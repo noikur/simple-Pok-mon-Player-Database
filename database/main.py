@@ -40,10 +40,6 @@ elif start == "y":
 
     name = input("Player name: ")
 
-cursor.execute("SELECT * FROM players WHERE player_name = ?", (name,))
-
-player = cursor.fetchone()
-print(player)
 
 cursor.execute("""
                 UPDATE players
@@ -51,19 +47,37 @@ cursor.execute("""
                 WHERE player_name = ?
                 """, (name,))
 
+if cursor.rowcount == 1:
+    # success
+    cursor.execute("SELECT * FROM players WHERE player_name = ?", (name,))
+    player = cursor.fetchone()
+    lvl = player[3]
+    xp = player[4]
 
-print(f"{name} has gained exprience.")
+    xp_required = lvl * 100
+    
 
-lvl = player[3]
-xp = player[4]
+    if xp >= xp_required:
+        xp -= xp_required
+        lvl += 1
 
-xp_required = lvl * 100
+        cursor.execute("""
+                        UPDATE players
+                        SET level = ?
+                        WHERE player_name = ?
+                        """, (lvl, name))
+        if cursor.rowcount == 1:
+            print(f"congratulations {name} is now level {lvl}")
+        else:
+            print(f"{name}'s is still level {lvl}")
 
-if xp >= xp_required:
-    lvl += 1
+    
+else:
+    print("null no player")
 
 
-    print(f"congratulations {name} is now level {lvl}")
+    
+
 connection.commit()
 connection.close()
 
