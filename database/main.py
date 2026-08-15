@@ -40,43 +40,70 @@ elif start == "y":
 
     name = input("Player name: ")
 
+print("chose an option \n 1. gain xp \n 2. delete character \n 3. view all characters")
+option = input("your choice: ")
 
-cursor.execute("""
-                UPDATE players
-                SET experience = experience + 100
-                WHERE player_name = ?
-                """, (name,))
+if option == "1":
 
-if cursor.rowcount == 1:
-    # success
-    cursor.execute("SELECT * FROM players WHERE player_name = ?", (name,))
-    player = cursor.fetchone()
-    lvl = player[3]
-    xp = player[4]
+    cursor.execute("""
+                    UPDATE players
+                    SET experience = experience + 100
+                    WHERE player_name = ?
+                    """, (name,))
 
-    xp_required = lvl * 100
-    
+    if cursor.rowcount == 1:
+        # success
+        cursor.execute("SELECT * FROM players WHERE player_name = ?", (name,))
+        player = cursor.fetchone()
+        lvl = player[3]
+        xp = player[4]
 
-    if xp >= xp_required:
-        xp -= xp_required
-        lvl += 1
+        xp_required = lvl * 100
+        
 
-        cursor.execute("""
-                        UPDATE players
-                        SET level = ?
-                        WHERE player_name = ?
-                        """, (lvl, name))
-        if cursor.rowcount == 1:
-            print(f"congratulations {name} is now level {lvl}")
+        if xp >= xp_required:
+            xp -= xp_required
+            lvl += 1
+
+            cursor.execute("""
+                            UPDATE players
+                            SET level = ?,
+                            experience = ?
+                            WHERE player_name = ?
+                            """, (lvl, xp, name))
+            if cursor.rowcount == 1:
+                
+                print(f"congratulations {name} is now level {lvl}")
+            else:
+                print("Level update failed.")
+
+        
+    else:
+        print("null no player")
+
+elif option == "2":
+
+    cursor.execute("""
+    DELETE FROM players
+    WHERE player_name = ?
+    """, (name,))
+
+    if cursor.rowcount == 1:
+        cursor.execute("SELECT * FROM players WHERE player_name = ?", (name,))
+        player = cursor.fetchone()
+        if player is None:
+            print(f"player {name} has been deleted.")
         else:
-            print(f"{name}'s is still level {lvl}")
+            print(f"error: {name} still exists")
+    else:
+        print(f"player {name} not found.")
 
-    
-else:
-    print("null no player")
+elif option == "3":
+    cursor.execute("SELECT * FROM players")
+    players = cursor.fetchall()
 
-
-    
+    for player in players:
+        print(player)
 
 connection.commit()
 connection.close()
